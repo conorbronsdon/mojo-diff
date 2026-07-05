@@ -1,0 +1,6 @@
+--- a
++++ b
+@@ -1,3 +0,0 @@
+-gone one
+-gone two
+-gone three

@@ -1,0 +1,12 @@
+--- a
++++ b
+@@ -3,3 +3,3 @@
+ ctx02
+-ctx03
++CHANGED-3
+ ctx04
+@@ -25,3 +25,3 @@
+ ctx24
+-ctx25
++CHANGED-25
+ ctx26

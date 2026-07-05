@@ -1,0 +1,7 @@
+def load(path):
+    data = open(path).read()
+    rows = data.split(chr(10))
+    total = 0
+    for r in rows:
+        total += len(r)
+    return total

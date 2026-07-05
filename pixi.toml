@@ -1,0 +1,15 @@
+[workspace]
+authors = ["Conor Bronsdon <cmbronsdon@gmail.com>"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+name = "mojo-diff"
+description = "Pure-Mojo text diffing library mirroring Python's difflib API"
+platforms = ["linux-64", "osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+test = "mojo run -I src test/test_diff.mojo"
+fuzz = "mojo run -I src test/fuzz_runner.mojo test/data/code_edit.a.txt"
+demo = "mojo run -I src examples/diff_files.mojo test/data/code_edit.a.txt test/data/code_edit.b.txt"
+
+[dependencies]
+mojo = ">=1.0.0b3,<2"

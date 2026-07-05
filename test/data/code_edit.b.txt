@@ -1,0 +1,9 @@
+def load(path):
+    if not path:
+        return 0
+    data = open(path).read()
+    lines = data.split(chr(10))
+    total = 0
+    for line in lines:
+        total += len(line)
+    return total

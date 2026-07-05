@@ -1,0 +1,11 @@
+--- a
++++ b
+@@ -1,4 +1,4 @@
+-one
+-two
+-three
+-four
++apple
++banana
++cherry
++date
