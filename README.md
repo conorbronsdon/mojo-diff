@@ -123,23 +123,27 @@ are (re)generated with `python3 test/data/generate_fixtures.py`.
 `test/fuzz_runner.mojo` exercises the diff engine against corrupted or
 random input to confirm it never crashes.
 
-## Part of the Mojo content-tooling suite
+## Part of a pure-Mojo library suite
 
-- [mojo-feed](https://github.com/conorbronsdon/mojo-feed): RSS, Atom, and
-  JSON Feed parsing.
-- [mojo-captions](https://github.com/conorbronsdon/mojo-captions): SRT and
-  WebVTT subtitle/transcript parsing.
-- [mojo-html](https://github.com/conorbronsdon/mojo-html): HTML parsing.
-- [mojo-markdown](https://github.com/conorbronsdon/mojo-markdown): Markdown
-  parsing.
-- [mojo-tar](https://github.com/conorbronsdon/mojo-tar): tar archive
-  reading and writing, mirroring `tarfile`.
-- [mojo-unicodedata](https://github.com/conorbronsdon/mojo-unicodedata):
-  Unicode normalization and case folding.
-- [mojo-redis](https://github.com/conorbronsdon/mojo-redis): a Redis
-  client, mirroring `redis-py`.
-- [mojo-template](https://github.com/conorbronsdon/mojo-template): a
-  Jinja-flavored template engine.
+Nine pure-Mojo libraries that mirror familiar Python stdlib and PyPI APIs,
+filling gaps in the native Mojo ecosystem:
+
+- [mojo-feed](https://github.com/conorbronsdon/mojo-feed) — RSS, Atom, and
+  JSON Feed parsing (Python's `feedparser`)
+- [mojo-captions](https://github.com/conorbronsdon/mojo-captions) — SRT and
+  WebVTT subtitle/transcript parsing (no Python stdlib parallel)
+- [mojo-html](https://github.com/conorbronsdon/mojo-html) — HTML parsing and
+  article extraction (Python's readability)
+- [mojo-markdown](https://github.com/conorbronsdon/mojo-markdown) —
+  CommonMark markdown parsing (Python's `markdown`)
+- [mojo-unicodedata](https://github.com/conorbronsdon/mojo-unicodedata) —
+  Unicode normalization and case folding (Python's `unicodedata`)
+- [mojo-template](https://github.com/conorbronsdon/mojo-template) — a
+  Jinja-flavored template engine (Python's `jinja2`)
+- [mojo-tar](https://github.com/conorbronsdon/mojo-tar) — tar archive
+  reading and writing (Python's `tarfile`)
+- [mojo-redis](https://github.com/conorbronsdon/mojo-redis) — a Redis
+  client (Python's `redis-py`)
 
 ## Contributing
 
