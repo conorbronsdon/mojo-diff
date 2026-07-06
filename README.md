@@ -23,6 +23,21 @@ unified-diff output that Python's
 the fixture corpus in `test/data/`, generated directly by Python's
 difflib.
 
+### Coming from Python
+
+If you know Python's `difflib`, the core operations map like this:
+
+| Python (`difflib`)                             | mojo-diff                                                |
+| ---------------------------------------------- | -------------------------------------------------------- |
+| `difflib.unified_diff(a, b, fromfile, tofile)` | `unified_diff(a, b, fromfile, tofile, n)`                |
+| `SequenceMatcher(None, a, b).ratio()`          | `ratio(splitlines_keepends(a), splitlines_keepends(b))`  |
+| `SequenceMatcher(None, a, b).get_opcodes()`    | `get_opcodes(splitlines_keepends(a), splitlines_keepends(b))` |
+
+One shape difference: `difflib.unified_diff` takes **lists of lines**, whereas
+mojo-diff's `unified_diff` takes the two whole strings and splits them for you.
+`ratio` and `get_opcodes` operate on line lists — use `splitlines_keepends(s)`
+to produce them.
+
 ## What it handles
 
 - **`get_opcodes(a, b)`**, mirroring `SequenceMatcher.get_opcodes()`: edit
@@ -125,9 +140,11 @@ random input to confirm it never crashes.
 
 ## Part of a pure-Mojo library suite
 
-Ten pure-Mojo libraries that mirror familiar Python stdlib and PyPI APIs,
+Eleven pure-Mojo libraries that mirror familiar Python stdlib and PyPI APIs,
 filling gaps in the native Mojo ecosystem:
 
+- [mojo-xml](https://github.com/conorbronsdon/mojo-xml) — general-purpose XML
+  parsing, an ElementTree-shaped DOM (Python's `xml.etree.ElementTree`)
 - [mojo-feed](https://github.com/conorbronsdon/mojo-feed) — RSS, Atom, and
   JSON Feed parsing (Python's `feedparser`)
 - [mojo-captions](https://github.com/conorbronsdon/mojo-captions) — SRT and
