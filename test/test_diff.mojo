@@ -155,6 +155,41 @@ def test_opcode_roundtrip() raises:
         assert_equal(rebuilt[i], b[i], "roundtrip line " + String(i))
 
 
+# --- edit-distance cap / DoS guard -----------------------------------------
+
+
+def test_cap_coarse_fallback() raises:
+    # Shared prefix (2 lines) + a differing middle that has an internal match
+    # ("MID") + shared suffix (2 lines). Under a tiny cap the exact search bails
+    # out and the middle collapses to a single coarse `replace`, while the
+    # shared prefix/suffix are still reported as `equal`.
+    var a = _lines("p0", "p1", "a0", "MID", "a1", "s0", "s1")
+    var b = _lines("p0", "p1", "b0", "MID", "b1", "s0", "s1")
+    var coarse = get_opcodes(a, b, 2)
+    var exp = List[OpCode]()
+    exp.append(OpCode(String("equal"), 0, 2, 0, 2))
+    exp.append(OpCode(String("replace"), 2, 5, 2, 5))
+    exp.append(OpCode(String("equal"), 5, 7, 5, 7))
+    _assert_ops(coarse, exp, "cap coarse fallback")
+    # With headroom the same diff stays fine-grained (the internal "MID" match
+    # is preserved), i.e. strictly more opcodes than the coarse form — proving
+    # the cap does not degrade any diff whose edit distance is within it.
+    var exact = get_opcodes(a, b, 100)
+    assert_true(len(exact) > len(coarse), "sub-cap diff stays fine-grained")
+
+
+def test_cap_bounds_dissimilar() raises:
+    # Fully dissimilar inputs (no shared prefix/suffix): the capped search must
+    # return a single coarse `replace` and terminate, instead of allocating the
+    # O(D^2) Myers trace that would OOM on large unrelated files.
+    var a = _lines("x0", "x1", "x2", "x3", "x4", "x5")
+    var b = _lines("y0", "y1", "y2", "y3", "y4", "y5")
+    var ops = get_opcodes(a, b, 2)
+    var exp = List[OpCode]()
+    exp.append(OpCode(String("replace"), 0, 6, 0, 6))
+    _assert_ops(ops, exp, "cap dissimilar single replace")
+
+
 # --- ratio -----------------------------------------------------------------
 
 
