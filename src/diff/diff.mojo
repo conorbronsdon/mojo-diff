@@ -10,11 +10,30 @@ with `difflib.unified_diff` — same hunk grouping and `@@` range math).
 `difflib` fed by `readlines()`. A final line without a newline is emitted without
 one — matching difflib, which does not print a "\\ No newline at end of file"
 marker (that is a GNU-diff feature, not a difflib one).
+
+Memory bound: the Myers backtrack stores one `V` snapshot per edit-distance
+step `d`, so the trace is `O(d^2)` in the edit distance. On adversarial,
+fully-dissimilar inputs `d` approaches `len(a) + len(b)`, which would allocate
+tens of GB for two large unrelated files (a DoS). To keep memory bounded,
+`matching_blocks` caps the exact search at `max_edit_distance` steps
+(default `_MAX_EDIT_DISTANCE`). Past the cap it stops the quadratic search and
+returns a *coarse* result: the shared leading/trailing lines are preserved as
+equal blocks and the differing middle is reported as one block-level change.
+This keeps output byte-compatible with `difflib` for every input whose edit
+distance is within the cap (all realistic edits), and degrades gracefully —
+never OOMs — beyond it.
 """
 
 from diff.model import OpCode, Match
 
 comptime _NL = UInt8(0x0A)
+
+# Cap on the Myers edit-distance search. The backtrack trace holds one V
+# snapshot per step, so peak trace memory is ~`(_MAX_EDIT_DISTANCE + 1)^2`
+# ints (~170 MB at 4096). Diffs whose edit distance stays under this run
+# exactly (difflib-identical); more-dissimilar inputs fall back to a coarse
+# prefix/suffix-preserving result instead of allocating unbounded memory.
+comptime _MAX_EDIT_DISTANCE = 4096
 
 
 def _imax(a: Int, b: Int) -> Int:
@@ -49,12 +68,21 @@ def splitlines_keepends(text: String) -> List[String]:
     return lines^
 
 
-def matching_blocks(a: List[String], b: List[String]) -> List[Match]:
+def matching_blocks(
+    a: List[String],
+    b: List[String],
+    max_edit_distance: Int = _MAX_EDIT_DISTANCE,
+) -> List[Match]:
     """Matching blocks of `a` vs `b` via Myers O(ND), difflib-shaped.
 
     Returns maximal matching runs in increasing order, terminated by the
     `Match(len(a), len(b), 0)` sentinel (as `SequenceMatcher.get_matching_blocks`
     does).
+
+    The exact Myers search is capped at `max_edit_distance` steps to bound
+    memory (see module docstring). If the edit distance would exceed the cap,
+    a *coarse* result is returned: shared leading/trailing lines stay as equal
+    blocks and the differing middle is left as a single block-level change.
     """
     var n = len(a)
     var m = len(b)
@@ -62,6 +90,19 @@ def matching_blocks(a: List[String], b: List[String]) -> List[Match]:
     if n == 0 or m == 0:
         blocks.append(Match(n, m, 0))  # sentinel only; no matches possible
         return blocks^
+
+    # Common leading/trailing lines. Only used to build the coarse fallback
+    # below; the exact path recovers these naturally via Myers snakes.
+    var prefix = 0
+    while prefix < n and prefix < m and a[prefix] == b[prefix]:
+        prefix += 1
+    var suffix = 0
+    while (
+        suffix < (n - prefix)
+        and suffix < (m - prefix)
+        and a[n - 1 - suffix] == b[m - 1 - suffix]
+    ):
+        suffix += 1
 
     # Greedy forward pass, recording a trimmed V snapshot per edit distance d.
     var maxd = n + m
@@ -71,9 +112,15 @@ def matching_blocks(a: List[String], b: List[String]) -> List[Match]:
         v.append(0)
     var trace = List[List[Int]]()
     var found = False
+    var capped = False
     var d_final = 0
     var d = 0
     while d <= maxd:
+        if d > max_edit_distance:
+            # Exact search would need `(d+1)^2` trace ints; bail out to the
+            # bounded coarse fallback instead of growing memory unbounded.
+            capped = True
+            break
         var snap = List[Int]()
         for k in range(-d, d + 1):
             snap.append(v[k + offset])
@@ -98,6 +145,18 @@ def matching_blocks(a: List[String], b: List[String]) -> List[Match]:
         if found:
             break
         d += 1
+
+    if capped:
+        # Coarse, bounded fallback: keep the shared prefix/suffix as equal
+        # blocks and leave the differing middle as one block-level change
+        # (`get_opcodes` renders it as a single replace/insert/delete). This
+        # never allocates the quadratic trace, so memory stays bounded.
+        if prefix > 0:
+            blocks.append(Match(0, 0, prefix))
+        if suffix > 0:
+            blocks.append(Match(n - suffix, m - suffix, suffix))
+        blocks.append(Match(n, m, 0))  # sentinel
+        return blocks^
 
     # Backtrack through the trace, collecting matched (x, y) points in
     # decreasing order.
@@ -149,10 +208,17 @@ def matching_blocks(a: List[String], b: List[String]) -> List[Match]:
     return blocks^
 
 
-def get_opcodes(a: List[String], b: List[String]) -> List[OpCode]:
+def get_opcodes(
+    a: List[String],
+    b: List[String],
+    max_edit_distance: Int = _MAX_EDIT_DISTANCE,
+) -> List[OpCode]:
     """Edit opcodes turning `a` into `b`, mirroring `SequenceMatcher.get_opcodes`.
+
+    `max_edit_distance` caps the exact search (see `matching_blocks`); beyond it
+    the differing region collapses to a single coarse opcode.
     """
-    var blocks = matching_blocks(a, b)
+    var blocks = matching_blocks(a, b, max_edit_distance)
     var ops = List[OpCode]()
     var i = 0
     var j = 0
