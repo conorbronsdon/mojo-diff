@@ -1,4 +1,4 @@
-"""mojo-diff: pure-Mojo line diffing mirroring Python's `difflib` API."""
+"""Pure-Mojo line diffing mirroring Python's `difflib` API (mojo-diff)."""
 
 from diff.model import OpCode, Match
 from diff.diff import (
