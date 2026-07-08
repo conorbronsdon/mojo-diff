@@ -15,6 +15,4 @@ def main() raises:
         context = Int(String(args[3]))
     var a = open(String(args[1]), "r").read()
     var b = open(String(args[2]), "r").read()
-    print(
-        unified_diff(a, b, String(args[1]), String(args[2]), context), end=""
-    )
+    print(unified_diff(a, b, String(args[1]), String(args[2]), context), end="")

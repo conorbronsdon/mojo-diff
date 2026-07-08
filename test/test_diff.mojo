@@ -29,9 +29,7 @@ def _lines(*items: String) -> List[String]:
     return out^
 
 
-def _assert_ops(
-    got: List[OpCode], expected: List[OpCode], name: String
-) raises:
+def _assert_ops(got: List[OpCode], expected: List[OpCode], name: String) raises:
     assert_equal(len(got), len(expected), name + ": opcode count")
     for i in range(len(expected)):
         assert_true(got[i] == expected[i], name + ": opcode " + String(i))

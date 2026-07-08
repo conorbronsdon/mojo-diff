@@ -7,7 +7,7 @@ the two line sequences. Tag is one of "equal", "replace", "delete", "insert".
 
 
 @fieldwise_init
-struct OpCode(Copyable, Movable, Writable, Equatable):
+struct OpCode(Copyable, Equatable, Movable, Writable):
     """One edit opcode over two `List[String]` sequences.
 
     Half-open ranges: `a[a_start:a_end]` in the first sequence maps to
